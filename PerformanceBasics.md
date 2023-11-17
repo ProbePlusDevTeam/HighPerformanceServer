@@ -1,5 +1,7 @@
 Horizontal scalability is crucial for systems that handle high loads.
 
+![image](https://github.com/ProbePlusDevTeam/HighPerformanceServer/assets/109589584/5b422d76-df04-4430-8239-bc276a8fcbe4)
+
 Here are a few characteristics of a horizontally scalable API:
 
 - Stateless sessions
