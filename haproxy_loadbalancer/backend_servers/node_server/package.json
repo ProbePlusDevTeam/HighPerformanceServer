@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "newrelic": "^11.5.0",
+    "uber-statsd-client": "^1.7.3"
+  }
+}
