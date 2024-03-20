@@ -9,9 +9,9 @@ client1= paho.Client("control1")                           #create client object
 client1.on_publish = on_publish                          #assign function to callback
 client1.connect(broker,port)
 client1.loop_start()
-group_list=["1","2"]
+group_list=["5","6","7","8","9"]
 while True:
-    time.sleep(.001)
+    time.sleep(.01)
     #print(i)       
     #/vitals/group{str(i)[-1]}/{i}                    #establish connection
     

@@ -10,8 +10,8 @@ import (
 	"os"
 	"os/signal"
 	"reflect"
-	"runtime"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 	"vitals/dbinsertmodule"
@@ -21,10 +21,12 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-var clientOptions = options.Client().ApplyURI("mongodb://localhost:27017")
-var mongoClient, err = mongo.Connect(context.Background(), clientOptions)
-var groupMap = make(map[string]context.Context)
-
+var (
+	wg               sync.WaitGroup
+	clientOptions    = options.Client().ApplyURI("mongodb://localhost:27017")
+	mongoClient, err = mongo.Connect(context.Background(), clientOptions)
+	groupMap         = make(map[string]context.Context)
+)
 var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 	var x = msg.Payload()
 	fmt.Printf("Received message: %T from topic: %s,\n", x, msg.Topic())
@@ -38,12 +40,13 @@ var onMessageReceived mqtt.MessageHandler = func(client mqtt.Client, message mqt
 	if err := bson.UnmarshalExtJSON(message.Payload(), true, &doc); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(groupId, time.Now(), "number of go routine :", runtime.NumGoroutine())
+	//fmt.Println(groupId, time.Now(), "number of go routine :", runtime.NumGoroutine())
 	if _, ok := groupMap[groupId]; !ok {
 		dbName := "vitals"
 		duration := 5 * time.Second // Insert data every 5 seconds
 		groupMap[groupId] = context.Background()
-		go dbinsertmodule.StartInserting(mongoClient, groupMap[groupId], dbName, groupId, duration)
+		wg.Add(1)
+		go dbinsertmodule.StartInserting(mongoClient, groupMap[groupId], dbName, groupId, duration, &wg)
 		fmt.Println("part is not in list ", parts[2])
 
 	}
