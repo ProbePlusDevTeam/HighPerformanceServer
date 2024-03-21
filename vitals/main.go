@@ -46,7 +46,7 @@ var onMessageReceived mqtt.MessageHandler = func(client mqtt.Client, message mqt
 		duration := 5 * time.Second // Insert data every 5 seconds
 		groupMap[groupId] = context.Background()
 		wg.Add(1)
-		go dbinsertmodule.StartInserting(mongoClient, groupMap[groupId], dbName, groupId, duration, &wg)
+		go dbinsertmodule.StartInserting(mongoClient, groupMap, dbName, groupId, duration, &wg)
 		fmt.Println("part is not in list ", parts[2])
 
 	}

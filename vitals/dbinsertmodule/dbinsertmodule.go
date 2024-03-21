@@ -52,7 +52,7 @@ func (bi *BulkInsert) Cancel() {
 
 // StartInserting starts inserting documents into MongoDB collection
 // every specified duration.
-func StartInserting(client *mongo.Client, ctx context.Context, dbName, collectionName string, duration time.Duration, wg *sync.WaitGroup) {
+func StartInserting(client *mongo.Client, groupMap map[string]context.Context, dbName, collectionName string, duration time.Duration, wg *sync.WaitGroup) {
 	defer wg.Done()
 	// Create a new BulkInsert instance
 	bulkInsert, err := NewBulkInsert(client, dbName, collectionName)
@@ -67,13 +67,20 @@ func StartInserting(client *mongo.Client, ctx context.Context, dbName, collectio
 	defer ticker.Stop()
 	for {
 		select {
-		case <-ctx.Done():
+		case <-groupMap[collectionName].Done():
 			fmt.Println("exiting ")
 			return
 		case <-ticker.C:
 			streamDocumentsMutex.Lock()
+			if len(streamDocuments[collectionName]) == 0 {
+				delete(streamDocuments, collectionName)
+				delete(groupMap, collectionName)
+				fmt.Println("exiting ", streamDocuments, groupMap, collectionName)
+				streamDocumentsMutex.Unlock()
+				return
+			}
 			startTime := time.Now()
-			if err := bulkInsert.Execute(ctx, streamDocuments[collectionName]); err != nil {
+			if err := bulkInsert.Execute(groupMap[collectionName], streamDocuments[collectionName]); err != nil {
 				log.Printf("Error inserting documents: %v\n", err)
 			} else {
 				log.Printf("Inserted documents %d number of go routines %d groupid %s\n", len(streamDocuments[collectionName]), runtime.NumGoroutine(), collectionName)
